@@ -1,0 +1,117 @@
+PROJETO DIO 
+REQUISITOS :	CADASTRO DE USUARIO
+		lOGIN DO USUARIO
+		CADASTRO DE CURSO USUÁRIO AUTENTICADO
+		LISTA DE CURSOS DO USUARIO AUTENTICADO
+------------------------------------------------------------------------
+FERRAMENTAS:
+VISUAL STUDIO 2019
+POSTMAN
+------------------------------------------------------------------------
+Nome do projeto: Curso API / Passo a Passo
+App Asp net core no formato API
+1 . Apagamos a classe padrão 
+2 . Na pasta properties dentro do arquivo launchSettinns.json
+apagar o valor da linha 15 dentro de uma string 
+3 . configuração de rota na pasta controllers
+4. Criamos uma controller API vazia e demos o nome de usuário
+5. Criaamos um metodo na controller com nome de Logar usando o metodo post do Http na arquitetura restAPI
+6. Criamos a pasta Model, dentro dela a pasta Usuario e dentro da pasta utilizamos a classe LoginViewModelput
+Utilizamos o sufixo put: representando a entrada de dados
+7. Criamos dois atributo na classe LoginViewModel Login e senha 
+8 . No metodo Logar na controller estmos passando o parametros LoginViewModel loginviewmodel
+9. No retourn passamos loginviewmodel
+10. Postman serve para teste em API
+11. Atraves do postmna faremos uma request
+12. No postman criar uma requisição post com a url: https://localhost:44341/api/Usuario
+13. Requisição utilizando o formato json/ baseado na entrada de dados, Login senha 
+14. Na aba body, selecionar o formato json 
+{
+    "Login" : "teste",
+    "Senha" : "senha"
+}
+15. Criamos a classe RegistroViewModelInput cons 3 atributos Login, Email e senha com algumas dataanotion
+16. Crtl + r + g : apaga as bibliotecas que não estam sendo utilizadas.
+17. Criar um metodo regitrar para registrar um novo usuario http post.
+18. Criar as rotas com o route [Route("api/v1/usuario")]
+19. Depois de digitar os json clicar em send para  o postman dar o retorno 201 ou 202
+20. Na rota regitrar no postman ele retorne created 201 
+Obs: Não é um cadastro que estamos solicitando e sim um request de autorização
+----------------------------------------------------------------------------------------------------
+Documentação da nossa API utilizando o swagger
+
+Instalação do pacot nuget
+Configuração do XML
+Configuração do (IOC)
+Habilitar o Middleware
+-----------------------------------------------------------------------------------------------------
+1. Em propriedades do projeto
+Vai na aba depurar/build selecionar o a opção documento de arquivo xml/ XML documentation file:
+ele vai gerar no nivel do projeto um arquivo xml, vai implementar toda a documentação do codigo
+2. Instalar o pacote nuger Swashbuckle.AspNetCore
+3. Depois configurar o startup.cs
+4 . Configuração do serviço do swagger pegando o arquivo XML:
+ services.AddSwaggerGen(c =>
+            {
+                //Adiciona um swagger pra mim, Le um swagger de um arquivo xml. 
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";//Refaction, Nome do projeto curso.api.xml
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);//Diretório da minha aplicação, 
+                c.IncludeXmlComments(xmlPath);
+                //Esse serviço lê o arquivo de metadado e informando pro swagger aonde está aquele arquivo
+            });
+5. configurando o endpoint do swagger:
+
+
+            app.UseSwagger(); //Middleware do swagger
+            //Rota do swagger, qual arquivo ele vai ler. 
+            app.UseSwaggerUI(c => {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json","Api curso");
+                c.RoutePrefix = string.Empty;//Swagger
+            });
+6.
+O swagger não intende o status de erro 400 e 500, e pra isso existe um biblioteca pra nós apoiar com isso.
+nome da biblioteca: swasbuckle.AspNetCore.Annotatio.
+através do Swagger response conseguimos anotar nossa ação.
+7. criei as classes errorGenericoViewmodel e ValidaCampoviewmodel.
+8. Customiza a lista de request um campo que tem que ser preenchido obrigatóriamente
+9. SuppressModelStateInvalidFilter desabilitar o status da minha model, sair do padrão
+10. criação da pasta filters
+11. criação da classe ValidacaoModelStateCustomizado
+12. criando um metodo    
+public override void OnActionExecuted(ActionExecutedContext context)
+        {
+            if (!context.ModelState.IsValid)
+            {
+                var validaCampoViewModel = new ValidaCampoViewModelOutput(context.ModelState.SelectMany(sm => sm.Value.Errors).Select(s => s.ErrorMessage));
+                context.Result = new BadRequestObjectResult(validaCampoViewModel);
+            }
+        }
+13. Testar  no swagger se está retornando a mensagem de erro.
+---------------------------------------------------------------------------
+Configuração do provider json web token(jwt) / protegendo a API.
+1. Instalar pacotes jwt
+2. instalar pacotes Microsoft.AspNetCore.Authentication
+3. Configura a startup
+4.             //Vai enchegar a chave que configurei no json SECRETS, vou converter ela em bites
+            var secret = Encoding.ASCII.GetBytes(Configuration.GetSection("JwtConfigurations:Secret").Value); 
+            services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; //Configurando o midwalle do .net
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+                .AddJwtBearer(x =>
+                {
+                    x.RequireHttpsMetadata = false; //Não vou usar o https
+                    x.SaveToken = true;
+                    x.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(secret),
+                        ValidateIssuer = false,
+                        ValidateAudience = false
+                    };
+                });
+5.configurar o secrets no jsonsettings
+6. configurando a controller 
+7. testar.
+7. nova controller
